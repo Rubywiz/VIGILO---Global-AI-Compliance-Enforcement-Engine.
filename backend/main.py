@@ -39,8 +39,8 @@ class ConnectionManager:
     def __init__(self):
         self.connections: dict[str, list[WebSocket]] = {}
 
-    async def connect(self, session_id: str, websocket: WebSocket):
-        await websocket.accept()
+    async def connect(self, session_id: str, websocket: WebSocket, subprotocol: str | None = None):
+        await websocket.accept(subprotocol=subprotocol)
         if session_id not in self.connections:
             self.connections[session_id] = []
         self.connections[session_id].append(websocket)
@@ -104,7 +104,7 @@ async def upload_file(file: UploadFile = File(...)):
 
 @app.websocket("/ws/{session_id}")
 async def websocket_endpoint(websocket: WebSocket, session_id: str):
-    await manager.connect(session_id, websocket)
+    await manager.connect(session_id, websocket, subprotocol="ngrok-skip-browser-warning")
     try:
         while True:
             await websocket.receive_text()

@@ -13,6 +13,8 @@ const METRICS = [
   { label: 'Risk Events', value: '2', sub: 'Requires attention' },
 ]
 
+const API_BASE = 'https://untrading-irrelevantly-dustin.ngrok-free.dev'
+
 function Dashboard() {
   const [mode, setMode] = useState('document')
   const [sessionId, setSessionId] = useState(null)
@@ -20,33 +22,11 @@ function Dashboard() {
   const [error, setError] = useState(null)
   const [uploading, setUploading] = useState(false)
 
-  const uploadFile = useCallback(async (file) => {
-    setSessionId(null)
+  const connectWebSocket = useCallback((sid) => {
+    setSessionId(sid)
+    setUploading(false)
     setReport(null)
     setError(null)
-    setUploading(true)
-
-    const form = new FormData()
-    form.append('file', file)
-
-    try {
-      const res = await fetch('/upload', {
-        method: 'POST',
-        body: form,
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.detail || 'Upload failed')
-        setUploading(false)
-        return
-      }
-
-      setSessionId(data.session_id)
-    } catch {
-      setError('Failed to upload file')
-      setUploading(false)
-    }
   }, [])
 
   const handleReport = useCallback((reportData) => {
@@ -58,6 +38,36 @@ function Dashboard() {
     setError(msg)
     setUploading(false)
   }, [])
+
+  const uploadFile = useCallback(async (file) => {
+    setSessionId(null)
+    setReport(null)
+    setError(null)
+    setUploading(true)
+
+    const form = new FormData()
+    form.append('file', file)
+
+    try {
+      const res = await fetch(`${API_BASE}/upload`, {
+        method: 'POST',
+        headers: { 'ngrok-skip-browser-warning': 'true' },
+        body: form,
+      })
+      const data = await res.json()
+
+      if (!res.ok) {
+        setError(data?.detail || `Upload failed (${res.status})`)
+        setUploading(false)
+        return
+      }
+
+      connectWebSocket(data.session_id)
+    } catch {
+      setError('Failed to upload file')
+      setUploading(false)
+    }
+  }, [connectWebSocket])
 
   const handleTranscription = useCallback((text) => {
     setSessionId(null)
@@ -72,7 +82,6 @@ function Dashboard() {
 
   return (
     <div className="h-screen w-screen flex flex-col bg-surface-950">
-      {/* Premium header */}
       <header className="flex-shrink-0 border-b border-white/[0.04] px-6 py-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-4">
@@ -115,7 +124,6 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* Metric tiles */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {METRICS.map((m) => (
               <div
@@ -138,9 +146,7 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* Main content area */}
       <main className="flex-1 flex min-h-0 max-w-7xl mx-auto w-full px-6 py-6 gap-6">
-        {/* Left column — core workflow */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
           <div className="flex gap-1.5 bg-white/[0.02] rounded-xl p-1 self-start border border-white/[0.04]">
             <button
@@ -165,7 +171,7 @@ function Dashboard() {
             </button>
           </div>
 
-          <UploadZone mode={mode} onUpload={uploadFile} disabled={uploading} />
+          <UploadZone mode={mode} connectWebSocket={connectWebSocket} disabled={uploading} />
 
           {error ? (
             <div className="text-xs text-crimson-400 bg-crimson-500/10 rounded-xl px-4 py-3 border border-crimson-500/10">
@@ -180,7 +186,6 @@ function Dashboard() {
           ) : null}
         </div>
 
-        {/* Right column — report + enforcement feed */}
         <div className="w-[360px] flex-shrink-0 flex flex-col gap-4 min-h-0">
           {report ? (
             <div className="flex-1 glass-panel rounded-2xl p-5 overflow-y-auto scrollbar-thin min-h-0">
@@ -208,7 +213,6 @@ function Dashboard() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="flex-shrink-0 border-t border-white/[0.04] px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <span className="text-[10px] text-slate-700 tracking-wide">

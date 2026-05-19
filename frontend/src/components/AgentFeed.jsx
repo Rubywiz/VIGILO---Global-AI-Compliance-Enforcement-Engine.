@@ -120,10 +120,8 @@ export default function AgentFeed({ sessionId, onReport, onError, steps: externa
       wsRef.current.close()
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
-    const url = `${protocol}//${host}/ws/${sid}`
-    const ws = new WebSocket(url)
+    const url = `wss://untrading-irrelevantly-dustin.ngrok-free.dev/ws/${sid}`
+    const ws = new WebSocket(url, ["ngrok-skip-browser-warning"])
 
     ws.onopen = () => {
       retriesRef.current = 0
