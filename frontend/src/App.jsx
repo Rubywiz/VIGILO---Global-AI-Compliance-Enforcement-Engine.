@@ -30,7 +30,7 @@ function Dashboard() {
     form.append('file', file)
 
     try {
-      const res = await fetch('/upload', {
+      const res = await fetch('http://95.179.254.132:8000/upload', {
         method: 'POST',
         body: form,
       })
