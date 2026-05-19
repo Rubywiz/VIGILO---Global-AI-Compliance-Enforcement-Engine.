@@ -21,37 +21,25 @@ async def score_system(extracted_data: dict):
         api_key=api_key
     )
 
-    prompt = f"""
-You are an expert EU AI Act compliance scorer.
-Based on the following extracted AI system details, score the system against Articles 9, 10, 11, 13, 14, and 15.
+    prompt = f"""You are an EU AI Act compliance scorer. Score this AI system against Articles 9, 10, 11, 13, 14, 15.
 
-System Data:
-{json.dumps(extracted_data, indent=2)}
+System Data: {json.dumps(extracted_data, indent=2)}
 
-For each Article provide a score 0-100, pass boolean, and reason.
-
-Respond ONLY with valid JSON:
-{{
-  "Article_9": {{"score": 0, "pass": true, "reason": "string"}},
-  "Article_10": {{"score": 0, "pass": true, "reason": "string"}},
-  "Article_11": {{"score": 0, "pass": true, "reason": "string"}},
-  "Article_13": {{"score": 0, "pass": true, "reason": "string"}},
-  "Article_14": {{"score": 0, "pass": true, "reason": "string"}},
-  "Article_15": {{"score": 0, "pass": true, "reason": "string"}}
-}}
-"""
+Respond ONLY with this exact JSON structure, no other text:
+{{"Article_9": {{"score": 45, "pass": false, "reason": "explanation"}}, "Article_10": {{"score": 85, "pass": true, "reason": "explanation"}}, "Article_11": {{"score": 60, "pass": true, "reason": "explanation"}}, "Article_13": {{"score": 30, "pass": false, "reason": "explanation"}}, "Article_14": {{"score": 50, "pass": false, "reason": "explanation"}}, "Article_15": {{"score": 75, "pass": true, "reason": "explanation"}}}}"""
 
     try:
         response = await client.chat.completions.create(
             model="google/gemma-4-E4B-it",
             messages=[
-                {"role": "system", "content": "You are a strict compliance auditor. Respond only in JSON."},
+                {"role": "system", "content": "You are a compliance auditor. Output only valid JSON."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.1
         )
 
         text = response.choices[0].message.content.strip()
+        print(f"RAW: {text[:300]}")
 
         if "<think>" in text:
             text = text.split("</think>")[-1].strip()
@@ -65,8 +53,8 @@ Respond ONLY with valid JSON:
         if json_match:
             return json.loads(json_match.group())
         else:
-            raise ValueError("No JSON found in response")
+            raise ValueError("No JSON found")
 
     except Exception as e:
         print(f"Error in scorer: {e}")
-        return {f"Article_{i}": {"score": 0, "pass": False, "reason": f"Error scoring: {str(e)}"} for i in [9, 10, 11, 13, 14, 15]}
+        return {f"Article_{i}": {"score": 0, "pass": False, "reason": f"Error: {str(e)}"} for i in [9, 10, 11, 13, 14, 15]}
