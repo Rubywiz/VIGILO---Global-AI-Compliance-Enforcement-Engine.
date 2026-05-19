@@ -40,7 +40,7 @@ function UploadZone({ mode, onComplete }) {
     formData.append('file', file);
     
     try {
-      const backendUrl = window.location.hostname === 'localhost' ? 'http://localhost:8000' : `${window.location.protocol}//${window.location.hostname}:8000`;
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const response = await fetch(`${backendUrl}/upload`, {
         method: 'POST',
         body: formData,
