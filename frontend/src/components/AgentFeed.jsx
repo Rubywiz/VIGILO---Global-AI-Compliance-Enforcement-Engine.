@@ -1,13 +1,13 @@
-import React, { memo } from 'react'
+import React, { useEffect, useRef, useCallback, memo, useState } from 'react'
 
 const STEP_ICONS = {
-  pipeline: '⚙',
-  extract: '📂',
-  classification: '⚖',
-  code_analysis: '💻',
-  violations: '🚨',
-  scoring: '🧠',
-  report: '📝',
+  pipeline: '\u2699',
+  extract: '\ud83d\udcc2',
+  classification: '\u2696',
+  code_analysis: '\ud83d\udcbb',
+  violations: '\ud83d\udea8',
+  scoring: '\ud83e\udde0',
+  report: '\ud83d\udcdd',
 }
 
 const STEP_LABELS = {
@@ -77,7 +77,7 @@ function StatusIcon({ status }) {
 }
 
 const FeedItem = memo(function FeedItem({ step, index }) {
-  const icon = STEP_ICONS[step.step] || '•'
+  const icon = STEP_ICONS[step.step] || '\u2022'
   const label = STEP_LABELS[step.step] || step.step
 
   return (
@@ -107,7 +107,80 @@ const FeedItem = memo(function FeedItem({ step, index }) {
   )
 })
 
-export default function AgentFeed({ steps }) {
+export default function AgentFeed({ sessionId, onReport, onError, steps: externalSteps }) {
+  const [localSteps, setLocalSteps] = useState([])
+  const wsRef = useRef(null)
+  const retriesRef = useRef(0)
+  const timerRef = useRef(null)
+
+  const steps = externalSteps || localSteps
+
+  const connectWs = useCallback((sid) => {
+    if (wsRef.current) {
+      wsRef.current.close()
+    }
+
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = window.location.host
+    const url = `${protocol}//${host}/ws/${sid}`
+    const ws = new WebSocket(url)
+
+    ws.onopen = () => {
+      retriesRef.current = 0
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+    }
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        setLocalSteps(prev => [...prev, { ...data, timestamp: Date.now() }])
+
+        if (data.step === 'pipeline') {
+          if (data.status === 'complete' && onReport && data.data?.report) {
+            onReport(data.data.report)
+          } else if (data.status === 'error' && onError) {
+            onError(data.message || 'Pipeline failed')
+          }
+        }
+      } catch {
+      }
+    }
+
+    ws.onclose = () => {
+      wsRef.current = null
+      const backoff = Math.min(1000 * Math.pow(2, retriesRef.current), 30000)
+      retriesRef.current += 1
+      timerRef.current = setTimeout(() => {
+        connectWs(sid)
+      }, backoff)
+    }
+
+    ws.onerror = () => ws.close()
+    wsRef.current = ws
+  }, [onReport])
+
+  useEffect(() => {
+    if (!sessionId) {
+      setLocalSteps([])
+      return
+    }
+    connectWs(sessionId)
+    return () => {
+      if (wsRef.current) {
+        wsRef.current.close()
+        wsRef.current = null
+      }
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+        timerRef.current = null
+      }
+      retriesRef.current = 0
+    }
+  }, [sessionId, connectWs])
+
   if (!steps || steps.length === 0) return null
 
   return (

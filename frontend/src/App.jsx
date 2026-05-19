@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import UploadZone from './components/UploadZone'
 import AgentFeed from './components/AgentFeed'
 import VoiceInput from './components/VoiceInput'
@@ -7,66 +7,12 @@ import ReportCard from './components/ReportCard'
 function App() {
   const [mode, setMode] = useState('document')
   const [sessionId, setSessionId] = useState(null)
-  const [steps, setSteps] = useState([])
   const [report, setReport] = useState(null)
   const [error, setError] = useState(null)
   const [uploading, setUploading] = useState(false)
-  const wsRef = useRef(null)
-  const reconnectRef = useRef(null)
-
-  const connectWs = useCallback((sid) => {
-    if (wsRef.current) {
-      wsRef.current.close()
-    }
-
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
-    const url = `${protocol}//${host}/ws/${sid}`
-    const ws = new WebSocket(url)
-
-    ws.onopen = () => {
-      if (reconnectRef.current) {
-        clearInterval(reconnectRef.current)
-        reconnectRef.current = null
-      }
-    }
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data)
-      setSteps(prev => [...prev, { ...data, timestamp: Date.now() }])
-
-      if (data.step === 'pipeline') {
-        if (data.status === 'complete') {
-          setReport(data.data?.report || null)
-          setUploading(false)
-        } else if (data.status === 'error') {
-          setError(data.message || 'Pipeline failed')
-          setUploading(false)
-        }
-      }
-    }
-
-    ws.onclose = () => {
-      if (!reconnectRef.current) {
-        reconnectRef.current = setInterval(() => {
-          connectWs(sid)
-        }, 3000)
-      }
-    }
-
-    ws.onerror = () => ws.close()
-    wsRef.current = ws
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (wsRef.current) wsRef.current.close()
-      if (reconnectRef.current) clearInterval(reconnectRef.current)
-    }
-  }, [])
 
   const uploadFile = useCallback(async (file) => {
-    setSteps([])
+    setSessionId(null)
     setReport(null)
     setError(null)
     setUploading(true)
@@ -88,15 +34,24 @@ function App() {
       }
 
       setSessionId(data.session_id)
-      connectWs(data.session_id)
     } catch (err) {
       setError('Failed to upload file')
       setUploading(false)
     }
-  }, [connectWs])
+  }, [])
+
+  const handleReport = useCallback((reportData) => {
+    setReport(reportData)
+    setUploading(false)
+  }, [])
+
+  const handleError = useCallback((msg) => {
+    setError(msg)
+    setUploading(false)
+  }, [])
 
   const handleTranscription = useCallback((text) => {
-    setSteps([])
+    setSessionId(null)
     setReport(null)
     setError(null)
     setUploading(true)
@@ -161,9 +116,9 @@ function App() {
             </div>
           ) : null}
 
-          {steps.length > 0 ? (
+          {sessionId ? (
             <div className="flex-1 bg-surface-900/50 rounded-xl border border-surface-800 p-3 overflow-y-auto scrollbar-thin min-h-0">
-              <AgentFeed steps={steps} />
+              <AgentFeed sessionId={sessionId} onReport={handleReport} onError={handleError} />
             </div>
           ) : null}
         </div>
