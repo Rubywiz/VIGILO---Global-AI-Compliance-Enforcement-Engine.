@@ -1,10 +1,19 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback } from 'react'
+import SignInPage from './SignInPage'
 import UploadZone from './components/UploadZone'
 import AgentFeed from './components/AgentFeed'
 import VoiceInput from './components/VoiceInput'
 import ReportCard from './components/ReportCard'
+import EnforcementFeed from './components/EnforcementFeed'
 
-function App() {
+const METRICS = [
+  { label: 'AI Agents Monitored', value: '31', sub: 'Across 8 organizations' },
+  { label: 'Compliance Cases', value: '8', sub: '4 high-risk flagged' },
+  { label: 'Escrow Protected', value: '$42,000', sub: 'Circle Arc secured' },
+  { label: 'Risk Events', value: '2', sub: 'Requires attention' },
+]
+
+function Dashboard() {
   const [mode, setMode] = useState('document')
   const [sessionId, setSessionId] = useState(null)
   const [report, setReport] = useState(null)
@@ -34,7 +43,7 @@ function App() {
       }
 
       setSessionId(data.session_id)
-    } catch (err) {
+    } catch {
       setError('Failed to upload file')
       setUploading(false)
     }
@@ -61,92 +70,154 @@ function App() {
     uploadFile(file)
   }, [uploadFile])
 
-  const modeTabs = useMemo(() => (
-    <div className="flex gap-1 bg-surface-900 rounded-lg p-1 self-start">
-      <button
-        onClick={() => setMode('document')}
-        className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
-          mode === 'document'
-            ? 'bg-surface-800 text-white shadow-sm'
-            : 'text-slate-500 hover:text-slate-300'
-        }`}
-      >
-        Document
-      </button>
-      <button
-        onClick={() => setMode('code')}
-        className={`px-4 py-1.5 text-xs font-medium rounded-md transition-colors ${
-          mode === 'code'
-            ? 'bg-surface-800 text-white shadow-sm'
-            : 'text-slate-500 hover:text-slate-300'
-        }`}
-      >
-        Code
-      </button>
-    </div>
-  ), [mode])
-
   return (
     <div className="h-screen w-screen flex flex-col bg-surface-950">
-      <header className="flex-shrink-0 border-b border-surface-800 px-6 py-3">
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <div className="flex items-center gap-3">
-            <span className="text-xl" aria-hidden="true">&#x1F6E1;&#xFE0F;</span>
-            <h1 className="text-lg font-bold text-white tracking-tight">VIGILO</h1>
-            <span className="text-[10px] text-slate-600 font-medium uppercase tracking-widest bg-surface-800 px-2 py-0.5 rounded">
-              EU AI Act Compliance
-            </span>
+      {/* Premium header */}
+      <header className="flex-shrink-0 border-b border-white/[0.04] px-6 py-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+                  <svg className="w-4 h-4 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-sm font-display text-white tracking-tight leading-none">
+                    VIGILO
+                  </h1>
+                  <p className="text-[9px] font-medium text-accent-400/70 tracking-[0.2em] uppercase">
+                    Control Center
+                  </p>
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center gap-2 pl-4 border-l border-white/[0.04]">
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-500 shadow-sm shadow-teal-500/40" />
+                <span className="text-[11px] text-slate-500">All Systems Nominal</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <VoiceInput onTranscription={handleTranscription} disabled={uploading} />
+              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                uploading
+                  ? 'bg-amber-500/10 border border-amber-500/20'
+                  : 'bg-teal-500/5 border border-teal-500/10'
+              }`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${
+                  uploading ? 'bg-amber-500 animate-pulse' : 'bg-teal-500'
+                }`} />
+                <span className="text-[10px] font-medium text-slate-500">
+                  {uploading ? 'Processing' : 'Active'}
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <VoiceInput onTranscription={handleTranscription} disabled={uploading} />
-            <div className={`w-2 h-2 rounded-full ${uploading ? 'bg-accent animate-pulse' : 'bg-emerald-500'}`} />
+
+          {/* Metric tiles */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {METRICS.map((m) => (
+              <div
+                key={m.label}
+                className="bg-white/[0.02] border border-white/[0.04] rounded-xl px-4 py-3
+                           hover:bg-white/[0.03] transition-colors"
+              >
+                <p className="text-lg font-semibold text-white tabular-nums tracking-tight">
+                  {m.value}
+                </p>
+                <p className="text-[11px] font-medium text-slate-400 mt-0.5">
+                  {m.label}
+                </p>
+                <p className="text-[10px] text-slate-600 mt-0.5">
+                  {m.sub}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </header>
 
-      <main className="flex-1 flex items-stretch max-w-6xl mx-auto w-full px-6 py-6 gap-6 min-h-0">
+      {/* Main content area */}
+      <main className="flex-1 flex min-h-0 max-w-7xl mx-auto w-full px-6 py-6 gap-6">
+        {/* Left column — core workflow */}
         <div className="flex-1 flex flex-col gap-4 min-w-0">
-          {modeTabs}
+          <div className="flex gap-1.5 bg-white/[0.02] rounded-xl p-1 self-start border border-white/[0.04]">
+            <button
+              onClick={() => setMode('document')}
+              className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                mode === 'document'
+                  ? 'bg-accent/10 text-accent-300 shadow-sm border border-accent/20'
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              Document
+            </button>
+            <button
+              onClick={() => setMode('code')}
+              className={`px-4 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 ${
+                mode === 'code'
+                  ? 'bg-accent/10 text-accent-300 shadow-sm border border-accent/20'
+                  : 'text-slate-500 hover:text-slate-300'
+              }`}
+            >
+              Code
+            </button>
+          </div>
 
           <UploadZone mode={mode} onUpload={uploadFile} disabled={uploading} />
 
           {error ? (
-            <div className="text-xs text-red-400 bg-red-500/10 rounded-lg px-3 py-2">
+            <div className="text-xs text-crimson-400 bg-crimson-500/10 rounded-xl px-4 py-3 border border-crimson-500/10">
               {error}
             </div>
           ) : null}
 
           {sessionId ? (
-            <div className="flex-1 bg-surface-900/50 rounded-xl border border-surface-800 p-3 overflow-y-auto scrollbar-thin min-h-0">
+            <div className="flex-1 glass-panel rounded-2xl p-4 overflow-y-auto scrollbar-thin min-h-0">
               <AgentFeed sessionId={sessionId} onReport={handleReport} onError={handleError} />
             </div>
           ) : null}
         </div>
 
-        <div className="w-96 flex-shrink-0">
+        {/* Right column — report + enforcement feed */}
+        <div className="w-[360px] flex-shrink-0 flex flex-col gap-4 min-h-0">
           {report ? (
-            <div className="h-full bg-surface-900/50 rounded-xl border border-surface-800 p-5 overflow-y-auto scrollbar-thin">
+            <div className="flex-1 glass-panel rounded-2xl p-5 overflow-y-auto scrollbar-thin min-h-0">
               <ReportCard report={report} />
             </div>
           ) : (
-            <div className="h-full bg-surface-900/30 rounded-xl border border-surface-800 flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <div className="text-4xl text-slate-700" aria-hidden="true">&#x1F6E1;&#xFE0F;</div>
-                <p className="text-xs text-slate-600">Upload a file to start</p>
-                <p className="text-[10px] text-slate-700 max-w-[200px]">
+            <div className="flex-1 glass-panel rounded-2xl flex items-center justify-center p-6">
+              <div className="text-center space-y-3">
+                <div className="w-12 h-12 mx-auto rounded-xl bg-accent/5 border border-accent/10 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-accent/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-slate-500">Upload a file to begin</p>
+                <p className="text-[11px] text-slate-700 max-w-[200px] mx-auto leading-relaxed">
                   VIGILO will analyze your AI system against EU AI Act obligations
                 </p>
               </div>
             </div>
           )}
+
+          <div className="flex-shrink-0">
+            <EnforcementFeed />
+          </div>
         </div>
       </main>
 
-      <footer className="flex-shrink-0 border-t border-surface-800 px-6 py-2">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <span className="text-[10px] text-slate-700">VIGILO v1.0 &mdash; Autonomous AI Compliance Agent</span>
-          <span className="text-[10px] text-slate-700">
-            {sessionId ? `Session: ${sessionId.slice(0, 8)}...` : 'Ready'}
+      {/* Footer */}
+      <footer className="flex-shrink-0 border-t border-white/[0.04] px-6 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <span className="text-[10px] text-slate-700 tracking-wide">
+            VIGILO v1.0 &mdash; Autonomous AI Compliance Agent
+          </span>
+          <span className="text-[10px] text-slate-700 tabular-nums">
+            {sessionId
+              ? `Session: ${sessionId.slice(0, 8)}...`
+              : 'Awaiting input'}
           </span>
         </div>
       </footer>
@@ -154,4 +225,19 @@ function App() {
   )
 }
 
-export default App
+export default function App() {
+  const [authenticated, setAuthenticated] = useState(() => {
+    return sessionStorage.getItem('vigilo_auth') === 'true'
+  })
+
+  const handleSignIn = useCallback(() => {
+    sessionStorage.setItem('vigilo_auth', 'true')
+    setAuthenticated(true)
+  }, [])
+
+  if (!authenticated) {
+    return <SignInPage onSignIn={handleSignIn} />
+  }
+
+  return <Dashboard />
+}

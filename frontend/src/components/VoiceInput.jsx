@@ -26,7 +26,7 @@ export default function VoiceInput({ onTranscription, disabled }) {
 
       media.start()
       setRecording(true)
-    } catch (err) {
+    } catch {
       setError('Microphone access denied')
     }
   }, [onTranscription])
@@ -46,33 +46,40 @@ export default function VoiceInput({ onTranscription, disabled }) {
       const res = await fetch('/voice', { method: 'POST', body: form })
       const data = await res.json()
       onTranscription(data.transcript || '')
-    } catch (err) {
+    } catch {
       setError('Transcription failed')
     }
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-2.5">
       <button
         onClick={recording ? stopRecording : startRecording}
         disabled={disabled}
         className={`
-          relative w-10 h-10 rounded-full flex items-center justify-center
+          relative w-9 h-9 rounded-xl flex items-center justify-center
           transition-all duration-200
           ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
           ${recording
-            ? 'bg-red-500/20 text-red-400 ring-2 ring-red-500/50 animate-pulse-slow'
-            : 'bg-surface-800 text-slate-400 hover:bg-surface-700 hover:text-accent'}
+            ? 'bg-crimson-500/15 text-crimson-400 ring-2 ring-crimson-500/30'
+            : 'bg-white/[0.03] text-slate-500 hover:bg-white/[0.06] hover:text-accent border border-white/[0.06]'}
         `}
         title={recording ? 'Stop recording' : 'Voice input'}
       >
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
         </svg>
       </button>
-      {recording && <span className="text-xs text-red-400 animate-pulse">Recording...</span>}
-      {error && <span className="text-xs text-red-400">{error}</span>}
-      <span className="text-xs text-slate-600">Voice</span>
+      {recording && (
+        <span className="flex items-center gap-1.5 text-xs text-crimson-400">
+          <span className="w-1.5 h-1.5 rounded-full bg-crimson-500 animate-pulse" />
+          Recording
+        </span>
+      )}
+      {error && <span className="text-xs text-crimson-400">{error}</span>}
+      {!recording && !error && (
+        <span className="text-xs text-slate-600">Voice</span>
+      )}
     </div>
   )
 }

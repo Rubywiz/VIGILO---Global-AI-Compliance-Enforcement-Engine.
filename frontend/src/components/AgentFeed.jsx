@@ -48,7 +48,7 @@ function StatusIcon({ status }) {
     case 'complete':
       return (
         <svg
-          className="w-4 h-4 text-emerald-400 animate-pop-in"
+          className="w-4 h-4 text-teal-400 animate-pop-in"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -61,7 +61,7 @@ function StatusIcon({ status }) {
     case 'error':
       return (
         <svg
-          className="w-4 h-4 text-red-400 animate-pop-in"
+          className="w-4 h-4 text-crimson-400 animate-pop-in"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -72,7 +72,7 @@ function StatusIcon({ status }) {
         </svg>
       )
     default:
-      return <div className="w-4 h-4 rounded-full border border-slate-600" aria-hidden="true" />
+      return <div className="w-4 h-4 rounded-full border border-white/[0.06]" aria-hidden="true" />
   }
 }
 
@@ -82,22 +82,22 @@ const FeedItem = memo(function FeedItem({ step, index }) {
 
   return (
     <div
-      className="flex items-center gap-3 py-2 px-3 rounded-lg animate-fade-in-up"
+      className="flex items-center gap-3 py-2.5 px-3.5 rounded-xl animate-fade-in-up hover:bg-white/[0.02] transition-colors"
       style={{ animationDelay: `${index * 80}ms` }}
     >
-      <span className="text-base flex-shrink-0 w-6 text-center" aria-hidden="true">{icon}</span>
+      <span className="text-base flex-shrink-0 w-6 text-center text-slate-500" aria-hidden="true">{icon}</span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-slate-300 capitalize">{label}</span>
           {step.status === 'running' && step.step === 'scoring' && step.message ? (
-            <span className="text-xs text-slate-500 truncate">{step.message}</span>
+            <span className="text-xs text-slate-600 truncate">{step.message}</span>
           ) : null}
         </div>
         {step.status === 'complete' && step.message ? (
           <p className="text-xs text-slate-500 mt-0.5 truncate">{step.message}</p>
         ) : null}
         {step.status === 'error' && step.message ? (
-          <p className="text-xs text-red-400 mt-0.5 truncate">{step.message}</p>
+          <p className="text-xs text-crimson-400 mt-0.5 truncate">{step.message}</p>
         ) : null}
       </div>
       <div className="flex-shrink-0">
@@ -146,6 +146,7 @@ export default function AgentFeed({ sessionId, onReport, onError, steps: externa
           }
         }
       } catch {
+        // ignore malformed messages
       }
     }
 
@@ -184,7 +185,7 @@ export default function AgentFeed({ sessionId, onReport, onError, steps: externa
   if (!steps || steps.length === 0) return null
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {steps.map((step, i) => (
         <FeedItem key={`${step.step}-${i}`} step={step} index={i} />
       ))}

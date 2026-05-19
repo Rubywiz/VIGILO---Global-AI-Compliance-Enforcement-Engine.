@@ -1,10 +1,10 @@
 import React, { useRef, useEffect, useMemo, memo } from 'react'
 
 const RISK_COLORS = {
-  UNACCEPTABLE: { bg: 'bg-red-500/20', text: 'text-red-400', border: 'border-red-500/30', gauge: '#ef4444' },
-  HIGH: { bg: 'bg-orange-500/20', text: 'text-orange-400', border: 'border-orange-500/30', gauge: '#f97316' },
-  LIMITED: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30', gauge: '#eab308' },
-  MINIMAL: { bg: 'bg-emerald-500/20', text: 'text-emerald-400', border: 'border-emerald-500/30', gauge: '#22c55e' },
+  UNACCEPTABLE: { bg: 'bg-crimson-500/15', text: 'text-crimson-400', border: 'border-crimson-500/25', gauge: '#DC2626' },
+  HIGH: { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/25', gauge: '#f97316' },
+  LIMITED: { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/25', gauge: '#F59E0B' },
+  MINIMAL: { bg: 'bg-teal-500/15', text: 'text-teal-400', border: 'border-teal-500/25', gauge: '#2DD4BF' },
 }
 
 const ARTICLE_NAMES = {
@@ -20,18 +20,18 @@ function ArticleBar({ name, score, pass, delay }) {
   return (
     <div className="flex items-center gap-3">
       <span className="text-xs text-slate-400 w-36 shrink-0">{name}</span>
-      <div className="flex-1 h-2 bg-surface-800 rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
         <div
-          className="h-full rounded-full"
+          className="h-full rounded-full transition-all duration-700 ease-out"
           style={{
             animation: `barFill 0.6s ease-out ${delay}s forwards`,
             width: 0,
-            backgroundColor: score >= 70 ? '#22c55e' : score >= 50 ? '#eab308' : '#ef4444',
+            backgroundColor: score >= 70 ? '#2DD4BF' : score >= 50 ? '#F59E0B' : '#DC2626',
           }}
         />
       </div>
       <span
-        className={`text-xs font-medium w-8 text-right tabular-nums ${pass ? 'text-emerald-400' : 'text-red-400'}`}
+        className={`text-xs font-medium w-8 text-right tabular-nums ${pass ? 'text-teal-400' : 'text-crimson-400'}`}
       >
         {score}
       </span>
@@ -55,7 +55,7 @@ const ReportCard = memo(function ReportCard({ report }) {
   )
   const overallScore = compliance.overall_score || summary.overall_compliance_score || 0
 
-  const scoreColor = overallScore >= 70 ? '#22c55e' : overallScore >= 50 ? '#eab308' : '#ef4444'
+  const scoreColor = overallScore >= 70 ? '#2DD4BF' : overallScore >= 50 ? '#F59E0B' : '#DC2626'
 
   const gaugeRef = useRef(null)
 
@@ -84,12 +84,12 @@ const ReportCard = memo(function ReportCard({ report }) {
   }
 
   const riskTextColor = risk.tier === 'UNACCEPTABLE'
-    ? 'text-red-400'
+    ? 'text-crimson-400'
     : risk.tier === 'HIGH'
       ? 'text-orange-400'
       : risk.tier === 'LIMITED'
-        ? 'text-yellow-400'
-        : 'text-emerald-400'
+        ? 'text-amber-400'
+        : 'text-teal-400'
 
   const violationsCount = compliance.total_violations || violations.length
   const articlesPassed = compliance.articles_passed
@@ -102,18 +102,18 @@ const ReportCard = memo(function ReportCard({ report }) {
     <div className="space-y-5 animate-fade-in-up">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-white">Compliance Report</h3>
+          <h3 className="text-base font-semibold text-white tracking-tight">Compliance Report</h3>
           <p className="text-xs text-slate-500 mt-0.5">{summary.system_name}</p>
         </div>
-        <span className={`text-xl font-bold ${riskTextColor}`}>
+        <span className={`text-lg font-bold ${riskTextColor}`}>
           {summary.verdict}
         </span>
       </div>
 
-      <div className="grid grid-cols-[1fr_2fr] gap-6">
+      <div className="grid grid-cols-[1fr_2fr] gap-5">
         <div className="flex flex-col items-center justify-center relative">
           <svg className="w-28 h-28 -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="#1a1a2e" strokeWidth="8" />
+            <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="8" />
             <circle
               ref={gaugeRef}
               cx="50"
@@ -140,24 +140,24 @@ const ReportCard = memo(function ReportCard({ report }) {
           <p className="text-xs text-slate-400 leading-relaxed">{risk.description}</p>
           <div className="flex gap-4 text-xs tabular-nums">
             <div>
-              <span className="text-slate-500">Articles Passed: </span>
-              <span className="text-emerald-400 font-medium">{articlesPassed}/{totalArticles}</span>
+              <span className="text-slate-500">Passed: </span>
+              <span className="text-teal-400 font-medium">{articlesPassed}/{totalArticles}</span>
             </div>
             <div>
               <span className="text-slate-500">Failed: </span>
-              <span className="text-red-400 font-medium">{articlesFailed}</span>
+              <span className="text-crimson-400 font-medium">{articlesFailed}</span>
             </div>
             <div>
               <span className="text-slate-500">Violations: </span>
-              <span className="text-red-400 font-medium">{violationsCount}</span>
+              <span className="text-crimson-400 font-medium">{violationsCount}</span>
             </div>
           </div>
         </div>
       </div>
 
       {articleEntries.length > 0 ? (
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-slate-300">Article Scores</h4>
+        <div className="space-y-2.5">
+          <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Article Scores</h4>
           {articleEntries.map(([key, val], i) => (
             <ArticleBar
               key={key}
@@ -172,15 +172,12 @@ const ReportCard = memo(function ReportCard({ report }) {
 
       {violations.length > 0 ? (
         <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-red-400 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
+          <h4 className="text-xs font-semibold text-crimson-400 uppercase tracking-wider flex items-center gap-2">
             Violations
           </h4>
           {violations.map((v, i) => (
-            <div key={i} className="flex items-start gap-2 text-xs text-red-300 bg-red-500/5 rounded-lg px-3 py-2">
-              <span className="text-red-500 mt-0.5" aria-hidden="true">&bull;</span>
+            <div key={i} className="flex items-start gap-2 text-xs text-crimson-400/80 bg-crimson-500/5 rounded-xl px-3.5 py-2.5 border border-crimson-500/10">
+              <span className="text-crimson-500 mt-0.5" aria-hidden="true">&bull;</span>
               <span>{v.description || v}</span>
             </div>
           ))}
@@ -188,19 +185,22 @@ const ReportCard = memo(function ReportCard({ report }) {
       ) : null}
 
       {remediation.length > 0 ? (
-        <div className="space-y-2">
-          <h4 className="text-sm font-semibold text-slate-300">Remediation Steps</h4>
-          <ol className="space-y-1.5">
+        <div className="space-y-2.5">
+          <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider">Remediation Steps</h4>
+          <ol className="space-y-2">
             {remediation.map((r, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs text-slate-400 bg-surface-800/50 rounded-lg px-3 py-2">
+              <li key={i} className="flex items-start gap-2.5 text-xs text-slate-400 bg-white/[0.02] rounded-xl px-3.5 py-3 border border-white/[0.04]">
                 <span className="flex-shrink-0 w-5 h-5 rounded-full bg-accent/10 text-accent text-center leading-5 text-[10px] font-semibold">
                   {r.step}
                 </span>
-                <div className="flex-1">
-                  <span>{r.action}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-slate-300">{r.action}</span>
                   <span className="text-slate-600 ml-2">({r.article})</span>
                 </div>
-                <span className={`text-[10px] font-medium ${r.priority === 'CRITICAL' ? 'text-red-400' : r.priority === 'HIGH' ? 'text-orange-400' : 'text-yellow-400'}`}>
+                <span className={`text-[10px] font-medium flex-shrink-0 ${
+                  r.priority === 'CRITICAL' ? 'text-crimson-400' :
+                  r.priority === 'HIGH' ? 'text-orange-400' : 'text-amber-400'
+                }`}>
                   {r.priority}
                 </span>
               </li>
@@ -211,8 +211,9 @@ const ReportCard = memo(function ReportCard({ report }) {
 
       <button
         onClick={handleDownload}
-        className="w-full py-2.5 rounded-lg bg-accent/10 text-accent text-sm font-medium
-                   hover:bg-accent/20 transition-colors border border-accent/20"
+        className="w-full py-2.5 rounded-xl bg-accent/10 text-accent text-sm font-medium
+                   hover:bg-accent/20 transition-all duration-200 border border-accent/20
+                   hover:border-accent/30 active:scale-[0.98]"
       >
         Download Report
       </button>
