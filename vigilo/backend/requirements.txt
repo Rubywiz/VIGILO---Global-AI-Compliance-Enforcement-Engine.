@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+websockets
+google-generativeai
+openai
+python-dotenv
+requests
+aiofiles
