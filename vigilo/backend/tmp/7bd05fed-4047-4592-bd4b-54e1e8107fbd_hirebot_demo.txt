@@ -1,0 +1,11 @@
+SYSTEM: HireBot Pro v2.1
+Company: TalentAI SRL, Milan
+Function: Automated CV screening and candidate ranking
+for enterprise recruitment. Final hiring decisions made
+by AI with no human review step.
+
+Data used: Name, age, photo, address, employment history
+Sectors: HR/Recruitment
+Decision type: Automated — no human in the loop
+Audit logs: None implemented
+Training data: 2019-2022 LinkedIn scrape
